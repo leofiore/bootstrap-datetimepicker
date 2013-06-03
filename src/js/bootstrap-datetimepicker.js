@@ -125,10 +125,11 @@
       this.widget.show();
       this.height = this.component ? this.component.outerHeight() : this.$element.outerHeight();
       this.place();
-      this.$element.trigger({
-        type: 'show',
-        date: this._date
-      });
+      this.$element.trigger($.Event(
+        'show', {
+          date: this._date
+        }
+      ));
       this._attachDatePickerGlobalEvents();
       if (e) {
         e.stopPropagation();
@@ -157,10 +158,11 @@
       this.viewMode = this.startViewMode;
       this.showMode();
       this.set();
-      this.$element.trigger({
-        type: 'hide',
-        date: this._date
-      });
+      this.$element.trigger($.Event(
+        'hide', {
+          date: this._date
+        }
+      ));
       this._detachDatePickerGlobalEvents();
     },
 
@@ -300,11 +302,12 @@
     },
 
     notifyChange: function(){
-      this.$element.trigger({
-        type: 'changeDate',
-        date: this.getDate(),
-        localDate: this.getLocalDate()
-      });
+      this.$element.trigger($.Event(
+        'changeDate',{
+          date: this.getDate(),
+          localDate: this.getLocalDate()
+        })
+      );
     },
 
     update: function(newDate){
@@ -370,7 +373,7 @@
       this.widget.find('.datepicker-months').find('.disabled').removeClass('disabled');
       this.widget.find('.datepicker-years').find('.disabled').removeClass('disabled');
 
-      this.widget.find('.datepicker-days th:eq(1)').text(
+      this.widget.find('.datepicker-days th').eq(1).text(
         dates[this.language].months[month] + ' ' + year);
 
       var prevMonth = UTCDate(year, month-1, 28, 0, 0, 0, 0);
@@ -379,10 +382,10 @@
       prevMonth.setUTCDate(day);
       prevMonth.setUTCDate(day - (prevMonth.getUTCDay() - this.weekStart + 7) % 7);
       if ((year == startYear && month <= startMonth) || year < startYear) {
-        this.widget.find('.datepicker-days th:eq(0)').addClass('disabled');
+        this.widget.find('.datepicker-days th').eq(0).addClass('disabled');
       }
       if ((year == endYear && month >= endMonth) || year > endYear) {
-        this.widget.find('.datepicker-days th:eq(2)').addClass('disabled');
+        this.widget.find('.datepicker-days th').eq(2).addClass('disabled');
       }
 
       var nextMonth = new Date(prevMonth.valueOf());
@@ -418,21 +421,25 @@
         row.append('<td class="day' + clsName + '">' + prevMonth.getUTCDate() + '</td>');
         prevMonth.setUTCDate(prevMonth.getUTCDate() + 1);
       }
-      this.widget.find('.datepicker-days tbody').empty().append(html);
+      var tbody = this.widget.find('.datepicker-days tbody').empty();
+      for (var i=0; i < html.length; i++)
+        tbody.append(html[i]);
       var currentYear = this._date.getUTCFullYear();
 
-      var months = this.widget.find('.datepicker-months').find(
-        'th:eq(1)').text(year).end().find('span').removeClass('active');
+      var months = this.widget.find('.datepicker-months');
+      months.find('th').eq(1).text(year);
+      months = months.find('span').removeClass('active');
+
       if (currentYear === year) {
         months.eq(this._date.getUTCMonth()).addClass('active');
       }
       if (currentYear - 1 < startYear) {
-        this.widget.find('.datepicker-months th:eq(0)').addClass('disabled');
+        this.widget.find('.datepicker-months th').eq(0).addClass('disabled');
       }
       if (currentYear + 1 > endYear) {
-        this.widget.find('.datepicker-months th:eq(2)').addClass('disabled');
+        this.widget.find('.datepicker-months th').eq(2).addClass('disabled');
       }
-      for (var i = 0; i < 12; i++) {
+      for (i = 0; i < 12; i++) {
         if ((year == startYear && startMonth > i) || (year < startYear)) {
           $(months[i]).addClass('disabled');
         } else if ((year == endYear && endMonth < i) || (year > endYear)) {
@@ -442,17 +449,18 @@
 
       html = '';
       year = parseInt(year/10, 10) * 10;
-      var yearCont = this.widget.find('.datepicker-years').find(
-        'th:eq(1)').text(year + '-' + (year + 9)).end().find('td');
+      var yearCont = this.widget.find('.datepicker-years');
+      yearCont.find('th').eq(1).text(year + '-' + (year + 9));
+      yearCont = yearCont.find('td');
       this.widget.find('.datepicker-years').find('th').removeClass('disabled');
       if (startYear > year) {
-        this.widget.find('.datepicker-years').find('th:eq(0)').addClass('disabled');
+        this.widget.find('.datepicker-years').find('th').eq(0).addClass('disabled');
       }
       if (endYear < year+9) {
-        this.widget.find('.datepicker-years').find('th:eq(2)').addClass('disabled');
+        this.widget.find('.datepicker-years').find('th').eq(2).addClass('disabled');
       }
       year -= 1;
-      for (var i = -1; i < 11; i++) {
+      for (i = -1; i < 11; i++) {
         html += '<span class="year' + (i === -1 || i === 10 ? ' old' : '') + (currentYear === year ? ' active' : '') + ((year < startYear || year > endYear) ? ' disabled' : '') + '">' + year + '</span>';
         year += 1;
       }
@@ -1299,4 +1307,4 @@
   }
 
 
-})(window.jQuery)
+})(window.jQuery || window.Zepto)
